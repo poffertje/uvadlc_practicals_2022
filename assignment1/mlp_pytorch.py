@@ -59,7 +59,21 @@ class MLP(nn.Module):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        pass
+
+        super().__init__()
+
+        classnet = []
+        input_size = n_inputs
+
+        if len(n_hidden) != 0:
+          for hidden_size in n_hidden:
+            classnet += [nn.Linear(input_size, hidden_size)]
+            classnet += [nn.ELU()]
+            input_size = hidden_size
+
+        classnet += [nn.Linear(input_size, n_classes)]
+        self.classnet = nn.Sequential(*classnet)
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -81,6 +95,8 @@ class MLP(nn.Module):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
+
+        out = self.classnet(x)
 
         #######################
         # END OF YOUR CODE    #

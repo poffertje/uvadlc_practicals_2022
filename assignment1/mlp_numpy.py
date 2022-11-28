@@ -52,7 +52,19 @@ class MLP(object):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        pass
+
+        self.classnet = []
+        input_size = n_inputs
+
+        if len(n_hidden) != 0:
+          for hidden_size in n_hidden:
+            self.classnet += [LinearModule(input_size, hidden_size)]
+            self.classnet += [ELUModule()]
+            input_size = hidden_size
+
+        self.classnet += [LinearModule(input_size, n_classes)]
+        self.classnet += [SoftMaxModule()]
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -75,6 +87,11 @@ class MLP(object):
         # PUT YOUR CODE HERE  #
         #######################
 
+        for layer in self.classnet:
+          x = layer.forward(x)
+
+        out = x
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -95,7 +112,10 @@ class MLP(object):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        pass
+
+        for layer in reversed(self.classnet):
+          dout = layer.backward(dout)
+
         #######################
         # END OF YOUR CODE    #
         #######################

@@ -29,7 +29,7 @@ from copy import deepcopy
 from mlp_numpy import MLP
 from modules import CrossEntropyModule
 import cifar10_utils
-
+import matplotlib.pyplot as plt
 import torch
 
 
@@ -69,7 +69,7 @@ def confusion_matrix_to_metrics(confusion_matrix, beta=1.):
     #######################
     # PUT YOUR CODE HERE  #
     #######################
-
+    pass
     #######################
     # END OF YOUR CODE    #
     #######################
@@ -96,6 +96,27 @@ def evaluate_model(model, data_loader, num_classes=10):
     #######################
     # PUT YOUR CODE HERE  #
     #######################
+
+    # total predictions
+    total = 0
+    correct = 0
+    # initialize dictionary
+    metrics = {}
+
+    for images, labels in data_loader:
+        # flatten input
+        images = np.reshape(images, (images.shape[0], -1))
+        # get the scores of the forward pass
+        scores = model.forward(images)
+        # get the predicted labels
+        predicted = np.argmax(scores, axis=1)
+        # get all correct predictions
+        total += images.shape[0]
+        correct += (predicted == labels).sum().item()
+  
+    # calculate accuracy
+    accuracy = correct/total
+    metrics['accuracy'] = accuracy
 
     #######################
     # END OF YOUR CODE    #
@@ -149,21 +170,91 @@ def train(hidden_dims, lr, batch_size, epochs, seed, data_dir):
     # PUT YOUR CODE HERE  #
     #######################
 
-    # TODO: Initialize model and loss module
-    model = ...
-    loss_module = ...
-    # TODO: Training loop including validation
-    val_accuracies = ...
-    # TODO: Test best model
-    test_accuracy = ...
-    # TODO: Add any information you might want to save for plotting
-    logging_info = ...
+    model = MLP(n_inputs=3*32*32, n_hidden=hidden_dims, n_classes=10)
+    loss_module = CrossEntropyModule()
+
+    # initialize return variables
+    val_accuracies = []
+    logging_dict = {}
+    train_loss = []
+
+    # best loss achieved in training
+    best_loss = np.inf
+
+    for epoch in tqdm(range(epochs)):
+      # Running values
+      loss = 0.0
+      num_images = 0
+
+      for images, labels in cifar10_loader['train']:
+        # flatten input
+        images = np.reshape(images, (images.shape[0], -1))
+        # get the scores of the forward pass
+        scores = model.forward(images)
+        # forward pass
+        current_loss = loss_module.forward(scores, labels)
+        # backprop
+        backprop_loss = loss_module.backward(scores, labels)
+        model.backward(backprop_loss)
+
+        # update parameters
+        for layer in model.classnet:
+          # update only linear layers
+          try:
+            layer.params['weight'] = layer.params['weight'] - lr * layer.grads['weight']
+            layer.params['bias']   = layer.params['bias'] - lr * layer.grads['bias']
+          # else skip
+          except:
+            continue
+
+        # loss performance
+        loss += current_loss
+        num_images += images.shape[0]
+
+      loss = loss/batch_size
+      train_loss.append(loss)
+
+      # validation
+      metrics = evaluate_model(model=model, data_loader=cifar10_loader['validation'])
+      val_accuracies.append(metrics['accuracy'])
+
+      if epoch == 0:
+        best_loss = current_loss
+        best_model = deepcopy(model)
+      else:
+        if current_loss < best_loss:
+          best_loss = current_loss
+          best_model = deepcopy(model)
+
+    # test the model
+    metrics = evaluate_model(model=best_model, data_loader=cifar10_loader['test'])
+    test_accuracy = metrics['accuracy']
+
+    logging_dict['loss'] = train_loss
+    logging_dict['val_ac'] = val_accuracies
+    logging_dict['final_ac'] = test_accuracy
+
     #######################
     # END OF YOUR CODE    #
     #######################
 
     return model, val_accuracies, test_accuracy, logging_dict
 
+def plot_performance(logging_dict, name):
+
+  fig = plt.figure(figsize=(14, 8))
+  fig.suptitle(f'{name}: Numpy Performance', fontsize=18, y=0.95)
+  
+  plt.plot(np.arange(len(logging_dict['loss'])), logging_dict['loss'], 'o-', color='blue', linewidth='2', label='Train Loss')
+  plt.plot(np.arange(len(logging_dict['val_ac'])), logging_dict['val_ac'], 'o-', color='orange', linewidth='2', label='Train Accuracy')
+
+  # Add the test set performance
+  plt.hlines(logging_dict['final_ac'], xmin=0, xmax=len(logging_dict['loss']), linestyles='dashed', label='Test Accuracy')
+  plt.text(len(logging_dict['loss']), logging_dict['final_ac'], "{:.3f}".format(logging_dict['final_ac']))
+  plt.legend()
+  plt.xlabel('Epoch')
+  plt.ylabel('Loss/Accuracy')
+  plt.savefig(f'./data/{name}_numpy_performance.png', bbox_inches='tight')
 
 if __name__ == '__main__':
     # Command line arguments
@@ -190,6 +281,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     kwargs = vars(args)
 
-    train(**kwargs)
+    model, val_accuracies, test_accuracy, logging_dict = train(**kwargs)
     # Feel free to add any additional functions, such as plotting of the loss curve here
-    
+    print(test_accuracy)
+    plot_performance(logging_dict, 'MLP')
