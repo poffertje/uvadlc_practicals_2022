@@ -55,7 +55,7 @@ def get_model(num_classes=100):
     #######################
 
     # Get the pretrained ResNet18 model on ImageNet from torchvision.models
-    model = models.resnet18(pretrained=True)
+    model = models.resnet18(weights='IMAGENET1K_V1')
     # Freeze all layers
     for param in model.parameters():
         param.requires_grad = False
