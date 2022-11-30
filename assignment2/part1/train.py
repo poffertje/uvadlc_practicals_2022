@@ -194,10 +194,6 @@ def evaluate_model(model, data_loader, device):
             # Run the model on the input data
             scores = model.forward(images)
 
-            # Clear the computational graph
-            images = images.detach().cpu()
-            labels = labels.detach().cpu()
-
             # Get the predicted labels
             predicted = torch.argmax(scores, dim=1)
 
