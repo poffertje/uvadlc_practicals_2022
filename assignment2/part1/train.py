@@ -105,7 +105,8 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
     criterion = nn.CrossEntropyLoss()
 
     # Training loop with validation after each epoch. Save the best model.
-    model.train() 
+    model.to(device)
+    model.train()
     best_accuracy = -np.inf
 
     for epoch in tqdm(range(epochs)):
