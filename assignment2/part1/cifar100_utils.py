@@ -34,10 +34,15 @@ def add_augmentation(augmentation_name, transform_list):
     #######################
 
     # Create a new transformation based on the augmentation_name.
-    pass
+    if augmentation_name == 'flip':
+        augmentation = transforms.RandomHorizontalFlip()
 
     # Add the new transformation to the list.
-    pass
+    try:
+        transform_list.insert(3, augmentation)
+
+    except:
+        raise Exception(f'{augmentation_name} is not implemented')
 
     #######################
     # END OF YOUR CODE    #

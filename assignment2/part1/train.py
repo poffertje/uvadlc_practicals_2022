@@ -55,7 +55,7 @@ def get_model(num_classes=100):
     #######################
 
     # Get the pretrained ResNet18 model on ImageNet from torchvision.models
-    model = models.resnet18(weights='IMAGENET1K_V1')
+    model = models.resnet18(weights="IMAGENET1K_V1")
     # Freeze all layers
     for param in model.parameters():
         param.requires_grad = False
@@ -95,7 +95,7 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
     #######################
 
     # Load the datasets
-    train_set, val_set = get_train_validation_set(data_dir)
+    train_set, val_set = get_train_validation_set(data_dir, 5000, augmentation_name)
 
     train_loader = data.DataLoader(train_set, batch_size, shuffle=True)
     val_loader = data.DataLoader(val_set, batch_size, shuffle=True)
@@ -232,15 +232,16 @@ def main(lr, batch_size, epochs, data_dir, seed, augmentation_name):
     device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 
     # Load the model
-    model = get_model()
+    model = get_model(100)
 
     # Get the augmentation to use
-    
+    if augmentation_name is not None:
+        augmentation_name = augmentation_name.lower()
 
     # Train the model
     os.makedirs(MODELS_PATH, exist_ok=True)
     checkpoint_name = f'{MODELS_PATH}/resnet18_lr{lr}_batchsize{batch_size}_augmentation_{augmentation_name}.model'
-    model = train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device)
+    model = train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device, augmentation_name)
 
     # Evaluate the model on the test set
     test_set = get_test_set(data_dir)
