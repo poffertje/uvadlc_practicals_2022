@@ -55,9 +55,9 @@ def get_model(num_classes=100):
     #######################
 
     # Get the pretrained ResNet18 model on ImageNet from torchvision.models
-    model = models.resnet18(weights='IMAGENET1K_V1')
+    model = models.resnet18(pretrained=True)
     # Freeze all layers
-    for param in model.features.parameters():
+    for param in model.parameters():
         param.requires_grad = False
 
     # Randomly initialize and modify the model's last layer for CIFAR100.
@@ -140,6 +140,9 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
 
         # Validation loop
         val_accuracy = evaluate_model(model, val_loader, device)
+
+        if epoch % 10 == 0:
+            print(f'Epoch: {epoch}, Loss={epoch_loss:.3f}, Acc={val_accuracy:.3f}')
 
         if epoch == 0:
             best_accuracy = val_accuracy
