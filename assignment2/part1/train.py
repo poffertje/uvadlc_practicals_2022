@@ -97,8 +97,8 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
     # Load the datasets
     train_set, val_set = get_train_validation_set(data_dir, 5000, augmentation_name)
 
-    train_loader = data.DataLoader(train_set, batch_size, shuffle=True)
-    val_loader = data.DataLoader(val_set, batch_size, shuffle=True)
+    train_loader = data.DataLoader(train_set, batch_size, shuffle=True, num_workers=4)
+    val_loader = data.DataLoader(val_set, batch_size, shuffle=True, num_workers=4)
 
     # Initialize the optimizer (Adam) to train the last layer of the model.
     optimizer = torch.optim.Adam([p for p in model.parameters() if p.requires_grad == True], lr=lr) 
@@ -245,7 +245,7 @@ def main(lr, batch_size, epochs, data_dir, seed, augmentation_name):
 
     # Evaluate the model on the test set
     test_set = get_test_set(data_dir)
-    test_loader = data.DataLoader(test_set, batch_size, shuffle=False)
+    test_loader = data.DataLoader(test_set, batch_size, shuffle=False, num_workers=4)
     accuracy = evaluate_model(model, test_loader, device)
     print(f'FINAL PERFORMANCE:{accuracy:.3f}')
 
