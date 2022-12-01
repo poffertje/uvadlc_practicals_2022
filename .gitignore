@@ -15,3 +15,5 @@ assignment2/part1/saved_models/
 assignment2/part2/__pycache__/
 
 *.png
+
+assignment2/part2/$root/
