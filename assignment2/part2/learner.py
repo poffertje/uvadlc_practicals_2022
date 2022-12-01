@@ -229,13 +229,13 @@ class Learner:
 
             # Move the training data on GPU
             images = images.to(self.device)
-            labels = labels.to(self.device)
+            target = target.to(self.device)
 
             # Run the model on the input data
             output = self.vpt(images)
 
             # Calculate loss
-            loss = self.criterion(output, labels)
+            loss = self.criterion(output, target)
 
             # Perform backpropagation
             loss.backward(retain_graph=True)
@@ -309,13 +309,13 @@ class Learner:
 
                 # Move the data on GPU
                 images = images.to(self.device)
-                labels = labels.to(self.device)
+                target = target.to(self.device)
 
                 # Run the model on the input data
                 output = self.vpt(images)
 
                 # Calculate loss
-                loss = self.criterion(output, labels)
+                loss = self.criterion(output, target)
 
                 #######################
                 # END OF YOUR CODE    #
