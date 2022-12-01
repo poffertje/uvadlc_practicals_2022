@@ -42,6 +42,8 @@ class PadPrompter(nn.Module):
         # - Shape of self.pad_up and self.pad_down should be (1, 3, pad_size, image_size)
         # - See Fig 2.(g)/(h) and think about the shape of self.pad_left and self.pad_right
 
+        self.device = args.device
+
         pad = torch.randn(1, 3, pad_size, image_size)
         self.pad_up = torch.nn.Parameter(pad)
         self.pad_down = torch.nn.Parameter(pad)
@@ -83,6 +85,9 @@ class PadPrompter(nn.Module):
         w_diff = image_width - padleft_width
         mask[:, :, padup_height:h_diff, w_diff:image_width] = self.pad_right
 
+        mask = mask.to(self.device)
+        x = x.to(self.device)
+
         prompt = mask + x
 
         return prompt
@@ -116,6 +121,7 @@ class FixedPatchPrompter(nn.Module):
         # - You can define variable parameters using torch.nn.Parameter
         # - You can initialize the patch randomly in N(0, 1) using torch.randn
 
+        self.device = args.device
         patch = torch.randn(1, 3, args.prompt_size, args.prompt_size)
         self.patch = torch.nn.Parameter(patch)
 
@@ -141,6 +147,10 @@ class FixedPatchPrompter(nn.Module):
         # put the patch over the mask in the top left corner
         mask[:, :, 0:h, 0:w] = self.patch
         # create the prompt by filling the zeros in the mask with the input batch pixel values
+
+        mask = mask.to(self.device)
+        x = x.to(self.device)
+
         prompt = mask + x
 
         return prompt
@@ -175,6 +185,7 @@ class RandomPatchPrompter(nn.Module):
         # - You can define variable parameters using torch.nn.Parameter
         # - You can initialize the patch randomly in N(0, 1) using torch.randn
 
+        self.device = args.device
         patch = torch.randn(1, 3, args.prompt_size, args.prompt_size)
         self.patch = torch.nn.Parameter(patch)
 
@@ -205,10 +216,13 @@ class RandomPatchPrompter(nn.Module):
         random_y = np.random.randint(0, x_h - patch_h)
 
         mask[:, :, random_x:random_x+patch_h, random_y:random_y+patch_w] = self.patch
+
+        mask = mask.to(self.device)
+        x = x.to(self.device)
         prompt = mask + x
 
         return prompt
-        
+
         #######################
         # END OF YOUR CODE    #
         #######################
