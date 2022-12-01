@@ -122,9 +122,17 @@ class CustomCLIP(nn.Module):
         # - You need to multiply the similarity logits with the logit scale (clip_model.logit_scale).
         # - Return logits of shape (num_classes,).
 
-        print(self.prompt_learner.shape)
-        print(image.shape)
+        image = self.prompt_learner.to(self.device)(image)
 
+        with torch.no_grad():
+            image_features = self.clip_model.encode_image(image)
+
+        image_features /= image_features.norm(dim=-1, keepdim=True)
+        similarity = (100.0 * image_features @ self.text_features.T).softmax(dim=-1)
+        logits = similarity * self.logit_scale
+
+        return logits
+        
         #######################
         # END OF YOUR CODE    #
         #######################
