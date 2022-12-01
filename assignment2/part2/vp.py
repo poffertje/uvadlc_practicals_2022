@@ -42,7 +42,15 @@ class PadPrompter(nn.Module):
         # - Shape of self.pad_up and self.pad_down should be (1, 3, pad_size, image_size)
         # - See Fig 2.(g)/(h) and think about the shape of self.pad_left and self.pad_right
 
-        raise NotImplementedError
+        pad = torch.randn(1, 3, pad_size, image_size)
+        self.pad_up = torch.nn.Parameter(pad)
+        self.pad_down = torch.nn.Parameter(pad)
+
+        height = image_size - 2*pad_size
+        pad = torch.randn(1, 3, height, pad_size)
+        self.pad_right = torch.nn.Parameter(pad)
+        self.pad_left = torch.nn.Parameter(pad)
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -58,7 +66,26 @@ class PadPrompter(nn.Module):
         # - It is always advisable to implement and then visualize if
         #   your prompter does what you expect it to do.
 
-        raise NotImplementedError
+        # create a mask of the input batch and fill it with zeros
+        mask = torch.zeros(x.shape)
+        # add pad up
+        padup_height = self.pad_up.shape[2]
+        mask[:, :, 0:padup_height, :] = self.pad_up
+        # add pad down
+        image_height = x.shape[2]
+        h_diff = image_height - padup_height
+        mask[:, :, h_diff:image_height, :] = self.pad_down
+        # add pad left
+        padleft_width = self.pad_left.shape[3]
+        mask[:, :, padup_height:h_diff, 0:padleft_width] = self.pad_left
+        # add pad right
+        image_width = x.shape[3]
+        w_diff = image_width - padleft_width
+        mask[:, :, padup_height:h_diff, w_diff:image_width] = self.pad_right
+
+        prompt = mask + x
+
+        return prompt
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -91,7 +118,6 @@ class FixedPatchPrompter(nn.Module):
 
         patch = torch.randn(1, 3, args.prompt_size, args.prompt_size)
         self.patch = torch.nn.Parameter(patch)
-        self.device = args.device
 
         #######################
         # END OF YOUR CODE    #
@@ -108,15 +134,14 @@ class FixedPatchPrompter(nn.Module):
         # - It is always advisable to implement and then visualize if
         #   your prompter does what you expect it to do.
 
-        # get patch dimensions
-        h, w = self.patch.size[2], self.patch.size[3]
         # create a mask of the input batch and fill it with zeros
         mask = torch.zeros(x.shape)
-        # put the patch over the mask
+        # get patch dimensions
+        h, w = self.patch.shape[2], self.patch.shape[3]
+        # put the patch over the mask in the top left corner
         mask[:, :, 0:h, 0:w] = self.patch
         # create the prompt by filling the zeros in the mask with the input batch pixel values
-        prompt = torch.where(mask == 0, mask, x)
-        prompt = prompt.to(self.device)
+        prompt = mask + x
 
         return prompt
 
@@ -150,7 +175,9 @@ class RandomPatchPrompter(nn.Module):
         # - You can define variable parameters using torch.nn.Parameter
         # - You can initialize the patch randomly in N(0, 1) using torch.randn
 
-        raise NotImplementedError
+        patch = torch.randn(1, 3, args.prompt_size, args.prompt_size)
+        self.patch = torch.nn.Parameter(patch)
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -168,7 +195,20 @@ class RandomPatchPrompter(nn.Module):
         # - It is always advisable to implement and then visualize if
         #   your prompter does what you expect it to do.
 
-        raise NotImplementedError
+        # create a mask of the input batch and fill it with zeros
+        mask = torch.zeros(x.shape)
+
+        patch_h, patch_w = self.patch.shape[2], self.patch.shape[3]
+        x_h, x_w = x.shape[2], x.shape[3]
+        # create random path origin
+        random_x = np.random.randint(0, x_w - patch_w)
+        random_y = np.random.randint(0, x_h - patch_h)
+
+        mask[:, :, random_x:random_x+patch_h, random_y:random_y+patch_w] = self.patch
+        prompt = mask + x
+
+        return prompt
+        
         #######################
         # END OF YOUR CODE    #
         #######################

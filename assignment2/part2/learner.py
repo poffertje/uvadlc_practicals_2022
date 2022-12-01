@@ -67,7 +67,12 @@ class Learner:
         # Note: You need to keep the visual prompt's parameters trainable
         # Hint: Check for "prompt_learner" in the parameters' names
 
-        raise NotImplementedError
+        for name, param in self.vpt.named_parameters():
+            if "prompt_learner" in name:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -220,7 +225,24 @@ class Learner:
             # - Perform a backward pass
             # - Update the parameters
 
-            raise NotImplementedError
+            self.optimizer.zero_grad()
+
+            # Move the training data on GPU
+            images = images.to(self.device)
+            labels = labels.to(self.device)
+
+            # Run the model on the input data
+            output = self.vpt(images)
+
+            # Calculate loss
+            loss = self.criterion(output, labels)
+
+            # Perform backpropagation
+            loss.backward(retain_graph=True)
+
+            # Update the parameters
+            self.optimizer.step()
+
             #######################
             # END OF YOUR CODE    #
             #######################
@@ -285,7 +307,16 @@ class Learner:
                 # - Forward pass (using self.vpt)
                 # - Compute the loss (using self.criterion)
 
-                raise NotImplementedError
+                # Move the data on GPU
+                images = images.to(self.device)
+                labels = labels.to(self.device)
+
+                # Run the model on the input data
+                output = self.vpt(images)
+
+                # Calculate loss
+                loss = self.criterion(output, labels)
+
                 #######################
                 # END OF YOUR CODE    #
                 #######################
