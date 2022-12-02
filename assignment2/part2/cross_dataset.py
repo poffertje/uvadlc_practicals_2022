@@ -177,6 +177,7 @@ def main():
         # TODO: Define `classnames` as a list of 10 + 100 class labels from CIFAR10 and CIFAR100
 
         classnames = cifar10_test.classes + cifar100_test.classes
+        
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -263,7 +264,7 @@ def main():
         percent_cifar100 = len(cifar100_test) / num_all_samples
 
         accuracy_all = acc_cifar10 * percent_cifar10 + acc_cifar100 * percent_cifar100
-        
+
         #######################
         # END OF YOUR CODE    #
         #######################
