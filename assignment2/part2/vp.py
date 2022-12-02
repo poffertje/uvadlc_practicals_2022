@@ -45,13 +45,13 @@ class PadPrompter(nn.Module):
         self.device = args.device
 
         pad = torch.randn(1, 3, pad_size, image_size)
-        self.pad_up = torch.nn.Parameter(pad)
-        self.pad_down = torch.nn.Parameter(pad)
+        self.pad_up = torch.nn.Parameter(pad, requires_grad=True)
+        self.pad_down = torch.nn.Parameter(pad, requires_grad=True)
 
         height = image_size - 2*pad_size
         pad = torch.randn(1, 3, height, pad_size)
-        self.pad_right = torch.nn.Parameter(pad)
-        self.pad_left = torch.nn.Parameter(pad)
+        self.pad_right = torch.nn.Parameter(pad, requires_grad=True)
+        self.pad_left = torch.nn.Parameter(pad, requires_grad=True)
 
         #######################
         # END OF YOUR CODE    #
@@ -123,7 +123,7 @@ class FixedPatchPrompter(nn.Module):
 
         self.device = args.device
         patch = torch.randn(1, 3, args.prompt_size, args.prompt_size)
-        self.patch = torch.nn.Parameter(patch)
+        self.patch = torch.nn.Parameter(patch, requires_grad=True)
 
         #######################
         # END OF YOUR CODE    #
@@ -187,7 +187,7 @@ class RandomPatchPrompter(nn.Module):
 
         self.device = args.device
         patch = torch.randn(1, 3, args.prompt_size, args.prompt_size)
-        self.patch = torch.nn.Parameter(patch)
+        self.patch = torch.nn.Parameter(patch, requires_grad=True)
 
         #######################
         # END OF YOUR CODE    #
