@@ -227,3 +227,48 @@ class RandomPatchPrompter(nn.Module):
         # END OF YOUR CODE    #
         #######################
 
+class BadPadPrompter(nn.Module):
+    def __init__(self, args):
+        super(BadPadPrompter, self).__init__()
+        pad_size = args.prompt_size
+        image_size = args.image_size
+        
+        #######################
+        # PUT YOUR CODE HERE  #
+        #######################
+        
+        self.device = args.device
+        patch = torch.randn(1, 3, pad_size, pad_size)
+        self.patch = torch.nn.Parameter(patch, requires_grad=True)
+
+        #######################
+        # END OF YOUR CODE    #
+        #######################
+
+    def forward(self, x):
+        #######################
+        # PUT YOUR CODE HERE  #
+        #######################
+        
+        # create a mask of the input batch and fill it with zeros
+        mask = torch.zeros(x.shape)
+
+        patch_height, patch_width = self.patch.shape[2], self.patch.shape[3]
+        img_height, img_width = x.shape[2], x.shape[3]
+
+        patch_top = int(round((img_height - patch_height) / 2.0))
+        patch_left = int(round((img_width - patch_width) / 2.0))
+
+        mask[:, :, patch_top:patch_top+patch_height, patch_left:patch_left+patch_width] = self.patch
+
+        mask = mask.to(self.device)
+        x = x.to(self.device)
+        prompt = mask + x
+    
+        return prompt
+
+        #######################
+        # END OF YOUR CODE    #
+        #######################
+
+
