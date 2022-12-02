@@ -100,6 +100,7 @@ def get_train_validation_set(data_dir, validation_size=5000, augmentation_name=N
     train_transform = [transforms.Resize((224, 224)),
                        transforms.ToTensor(),
                        transforms.Normalize(mean, std)]
+
     if augmentation_name is not None:
         add_augmentation(augmentation_name, train_transform)
 
@@ -141,9 +142,10 @@ def get_test_set(data_dir, test_noise=False):
     mean = (0.5071, 0.4867, 0.4408)
     std = (0.2675, 0.2565, 0.2761)
 
-    test_transform = transforms.Compose([transforms.Resize((224, 224)),
-                                        transforms.ToTensor(),
-                                        transforms.Normalize(mean, std)])
+    test_transform = [transforms.Resize((224, 224)),
+                      transforms.ToTensor(),
+                      transforms.Normalize(mean, std)]
+
     if test_noise is True:
         test_transform = transforms.Compose(test_transform + [AddGaussianNoise()])
     else:
