@@ -252,7 +252,7 @@ def main(lr, batch_size, epochs, data_dir, seed, augmentation_name, evaluate, te
     test_set = get_test_set(data_dir, test_noise)
     test_loader = data.DataLoader(test_set, batch_size, shuffle=False, num_workers=4)
     accuracy = evaluate_model(model, test_loader, device)
-    print(f'FINAL PERFORMANCE:{accuracy:.3f}')
+    print(f'FINAL PERFORMANCE:{accuracy*100}')
 
     #######################
     # END OF YOUR CODE    #
