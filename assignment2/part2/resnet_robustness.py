@@ -26,7 +26,7 @@ import os
 from tqdm.auto import tqdm
 from cifar100_utils import get_train_validation_set, get_test_set
 
-MODELS_PATH = "./saved_models"
+MODELS_PATH = "./save"
 
 def set_seed(seed):
     """
