@@ -70,10 +70,16 @@ class VAE(pl.LightningModule):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        L_rec = None
-        L_reg = None
-        bpd = None
-        raise NotImplementedError
+
+        mean, log_std = self.encoder(imgs)
+        std = torch.exp(log_std)
+        z = sample_reparameterize(mean, std)
+        out = self.decoder(z)
+
+        L_rec = F.cross_entropy(out, imgs.squeeze(1), reduction='sum') / imgs.shape[0]
+        L_reg = KLD(mean, log_std).mean()
+        bpd = elbo_to_bpd(L_reg + L_rec, imgs.shape)
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -91,8 +97,15 @@ class VAE(pl.LightningModule):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        x_samples = None
-        raise NotImplementedError
+
+        z = torch.randn((batch_size, self.hparams.z_dim), device=self.device)
+        x = self.decoder(z).softmax(dim=1)
+
+        B, C, H, W = x.shape
+        x = x.permute(0, 2, 3, 1).reshape(-1, C)
+        x_samples = torch.multinomial(x, num_samples=1, replacement=True)
+        x_samples = x_samples.reshape(B, 1, H, W)
+        
         #######################
         # END OF YOUR CODE    #
         #######################

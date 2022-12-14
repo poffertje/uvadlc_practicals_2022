@@ -17,3 +17,9 @@ assignment2/part2/__pycache__/
 *.png
 
 assignment2/part2/$root/
+
+assignment3/part1/__pycache__/
+
+assignment3/data/*
+
+assignment3/part1/VAE_logs/*

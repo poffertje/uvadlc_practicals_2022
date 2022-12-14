@@ -20,7 +20,7 @@ import torch.nn.functional as F
 
 
 class ConvEncoder(nn.Module):
-    def __init__(self, z_dim):
+    def __init__(self, z_dim, num_input_channels = 1, num_filters = 32):
         """
         Convolutional Encoder network with Convolution and Linear layers, ReLU activations. The output layer
         uses a Fully connected layer to embed the representation to a latent code with z_dim dimension.
@@ -34,7 +34,24 @@ class ConvEncoder(nn.Module):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        raise NotImplementedError
+
+        c_hid = num_filters
+        self.net = nn.Sequential(
+            nn.Conv2d(num_input_channels, c_hid, kernel_size=3, padding=1, stride=2), # 32x32 => 16x16
+            nn.GELU(),
+            nn.Conv2d(c_hid, c_hid, kernel_size=3, padding=1),
+            nn.GELU(),
+            nn.Conv2d(c_hid, 2*c_hid, kernel_size=3, padding=1, stride=2), # 16x16 => 8x8
+            nn.GELU(),
+            nn.Conv2d(2*c_hid, 2*c_hid, kernel_size=3, padding=1),
+            nn.GELU(),
+            nn.Conv2d(2*c_hid, 2*c_hid, kernel_size=3, padding=1, stride=2), # 8x8 => 4x4
+            nn.GELU(),
+            nn.Flatten(), # Image grid to single feature vector
+        )
+
+        self.lat = nn.Linear(2*16*c_hid, z_dim)
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -49,8 +66,10 @@ class ConvEncoder(nn.Module):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        x = None
-        raise NotImplementedError
+
+        x = self.net(x)
+        z = self.lat(x)
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -65,7 +84,7 @@ class ConvEncoder(nn.Module):
 
 
 class ConvDecoder(nn.Module):
-    def __init__(self, z_dim):
+    def __init__(self, z_dim, num_input_channels = 16, num_filters = 32):
         """
         Convolutional Decoder network with linear and deconvolution layers and ReLU activations. The output layer
         uses a Tanh activation function to scale the output between -1 and 1.
@@ -80,7 +99,25 @@ class ConvDecoder(nn.Module):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        raise NotImplementedError
+
+        c_hid = num_filters
+        self.linear = nn.Sequential(
+            nn.Linear(z_dim, 2*16*c_hid),
+            nn.GELU()
+        )
+        self.net = nn.Sequential(
+            nn.ConvTranspose2d(2*c_hid, 2*c_hid, kernel_size=3, padding=1, stride=2), # 4x4 => 8x8
+            nn.GELU(),
+            nn.Conv2d(2*c_hid, 2*c_hid, kernel_size=3, padding=1),
+            nn.GELU(),
+            nn.ConvTranspose2d(2*c_hid, c_hid, kernel_size=3, output_padding=1, padding=1, stride=2), # 8x8 => 16x16
+            nn.GELU(),
+            nn.Conv2d(c_hid, c_hid, kernel_size=3, padding=1),
+            nn.GELU(),
+            nn.ConvTranspose2d(c_hid, num_input_channels, kernel_size=3, output_padding=1, padding=1, stride=2), # 16x16 => 32x32
+            nn.Tanh()
+        )
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -95,8 +132,11 @@ class ConvDecoder(nn.Module):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        recon_x = None
-        raise NotImplementedError
+
+        recon_x = self.linear(z)
+        recon_x = recon_x.reshape(recon_x.shape[0], -1, 4, 4)
+        recon_x = self.net(recon_x)
+
         #######################
         # END OF YOUR CODE    #
         #######################

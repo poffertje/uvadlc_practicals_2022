@@ -35,8 +35,10 @@ def sample_reparameterize(mean, std):
     #######################
     # PUT YOUR CODE HERE  #
     #######################
-    z = None
-    raise NotImplementedError
+
+    e = torch.randn_like(std)
+    z = mean + std * e
+
     #######################
     # END OF YOUR CODE    #
     #######################
@@ -58,8 +60,10 @@ def KLD(mean, log_std):
     #######################
     # PUT YOUR CODE HERE  #
     #######################
-    KLD = None
-    raise NotImplementedError
+
+    std = torch.exp(2*log_std)
+    KLD = 0.5 * torch.sum(std + mean**2 - 1 - 2*log_std, dim=-1)
+
     #######################
     # END OF YOUR CODE    #
     #######################
@@ -78,8 +82,10 @@ def elbo_to_bpd(elbo, img_shape):
     #######################
     # PUT YOUR CODE HERE  #
     #######################
-    bpd = None
-    raise NotImplementedError
+
+    _, c, h, w = img_shape
+    bpd = elbo * np.log2(np.e) / (c*h*w)
+
     #######################
     # END OF YOUR CODE    #
     #######################
@@ -110,8 +116,20 @@ def visualize_manifold(decoder, grid_size=20):
     #######################
     # PUT YOUR CODE HERE  #
     #######################
-    img_grid = None
-    raise NotImplementedError
+    
+    percentiles = torch.arange(0.5/grid_size, 1, 1/grid_size)
+    z = torch.distributions.Normal(0, 1).icdf(percentiles)
+    z = torch.cartesian_prod(z, z)
+
+    x = decoder(z).softmax(dim=1)
+    B, C, H, W = x.shape
+
+    x = x.permute(0, 2, 3, 1).reshape(-1, C)
+    x_samples = torch.multinomial(x, num_samples=1, replacement=True)
+    x_samples = x_samples.reshape(B, 1, H, W) / x_samples.max()
+    x_samples = x_samples.cpu().detach() 
+    img_grid = make_grid(x_samples, nrow=grid_size)
+    
     #######################
     # END OF YOUR CODE    #
     #######################
